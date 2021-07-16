@@ -132,3 +132,33 @@ def listing(request, listing_id):
             'listing': lstng,
             'number_of_bids': number_of_bids
         })
+
+
+def comment(request, listing_id):
+    if request.method == 'POST':
+        new_comment = Comment(user=request.user, comment=request.POST['newcomment'],
+                              listing=Listing.objects.get(id=listing_id))
+        new_comment.save()
+        return HttpResponseRedirect(reverse('listing', kwargs={'listing_id': listing_id}))
+
+
+def my_watchlist(request):
+    return render(request, 'auctions/watchlist.html', {
+        'items': User.objects.get(username=request.user.username).watchlist.all()
+    })
+
+
+def watchlist(request, listing_id=0):
+    if request.method == 'POST':
+        lst = Listing.objects.get(id=listing_id)
+        lst.watchlist_users = request.user
+        lst.save()
+
+        return HttpResponseRedirect(reverse('listing', kwargs={'listing_id': listing_id}))
+
+    return render(request, 'auctions/watchlist.html', {
+        'items': User.objects.get(username=request.user.username).watchlist.all()
+    })
+
+
+

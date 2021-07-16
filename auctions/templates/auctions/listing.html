@@ -5,6 +5,25 @@
         <h3>{{ listing.title }}</h3>
     </div>
 
+    {% if not listing.watchlist_users %}
+        <div class="no-bids">
+            <form action="{% url 'watchlist' listing.id %}" method="post">
+                {% csrf_token %}
+                <input type="submit" name="addwatchlist" value="Add to watchlist">
+            </form>
+        </div>
+
+    {% else %}
+        <div class="no-bids">
+            <input type="button" value="Watchlisted">
+        </div>
+{#        <div>#}
+{#             <form action="{% url 'addtowatchlist' %}" method="post">#}
+{#                <input type="submit" name="removewatchlist" value="Remove from watchlist">#}
+{#            </form>#}
+{#        </div>#}
+    {% endif %}
+
     <div>
         <img src="{{ listing.image_url }}" alt="{{ listing.title }}" width="400px">
     </div>
@@ -72,6 +91,23 @@
                 <div>No comments yet.</div>
             {% endfor %}
         </div>
+
+    {% if user.is_authenticated %}
+        <div class="comment">
+            <h3>Add a comment...</h3>
+            <div class="comment-form">
+                <form action="{% url 'comment' listing.id %}" method="post">
+                    {% csrf_token %}
+                    <input type="text" name="newcomment" aria-label="add a comment">
+                    <input type="submit" value="Add">
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <div class="comment">
+            <p>Please login to add a comment...</p>
+        </div>
+    {% endif %}
 
     </div>
 
