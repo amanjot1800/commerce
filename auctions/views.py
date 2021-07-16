@@ -3,12 +3,16 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django import forms
 
-from .models import User
+from .models import User, Listing, Bid, Comment
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+
+    return render(request, "auctions/index.html", {
+        "listings": Listing.objects.all().reverse(),
+    })
 
 
 def login_view(request):
@@ -61,3 +65,70 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
+
+
+class NewListingForm(forms.Form):
+    title = forms.CharField(label="Title", max_length=64)
+    description = forms.CharField(widget=forms.Textarea)
+    bid = forms.FloatField(label="Current Bid", min_value=0.0)
+    url = forms.URLField(label="Image URL")
+    category = forms.CharField(label="Category", max_length=64)
+
+
+def create(request):
+
+    if request.method == "POST":
+        form = NewListingForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data['title']
+            description = form.cleaned_data['description']
+            bid = form.cleaned_data['bid']
+            url = form.cleaned_data['url']
+            category = form.cleaned_data['category']
+            new = Listing(title=title, description=description, current_bid=bid, image_url=url,
+                          category=category, user=request.user)
+            new.save()
+            return HttpResponseRedirect(reverse('index'))
+
+    else:
+        return render(request, "auctions/create.html", {
+            "form": NewListingForm()
+        })
+
+
+def listing(request, listing_id):
+
+    lstng = Listing.objects.get(id=listing_id)
+    number_of_bids = lstng.bids.all().count()
+
+    if request.method == "POST":
+        new_bid = int(request.POST['new_bid'])
+
+        if new_bid <= lstng.current_bid:
+            return render(request, 'auctions/listing.html', {
+                'listing': lstng,
+                'number_of_bids': number_of_bids,
+                'error_bid': 'Your bid must be greater than the current bid.'
+            })
+        else:
+            lstng.current_bid = new_bid
+            lstng.save()
+
+            lstng2 = Listing.objects.get(id=listing_id)
+
+            bid = Bid(bidder=request.user, amount=new_bid, listing=lstng2)
+            bid.save()
+
+            number_of_bids2 = lstng2.bids.all().count()
+
+            return render(request, 'auctions/listing.html', {
+                'listing': lstng2,
+                'number_of_bids': number_of_bids2,
+                'success_bid': 'Your bid has been placed.'
+            })
+
+    else:
+        return render(request, 'auctions/listing.html', {
+            'listing': lstng,
+            'number_of_bids': number_of_bids
+        })

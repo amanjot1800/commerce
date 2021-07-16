@@ -1,0 +1,79 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <div>
+        <h3>{{ listing.title }}</h3>
+    </div>
+
+    <div>
+        <img src="{{ listing.image_url }}" alt="{{ listing.title }}" width="400px">
+    </div>
+
+    <div>
+        <p>{{ listing.description }}</p>
+    </div>
+
+    <div>
+        ${{ listing.current_bid }}
+    </div>
+
+    <div class="no-bids">
+        {{ number_of_bids }} bid(s) so far. Your bid is the current bid.
+    </div>
+
+    {% if user.is_authenticated %}
+        <div>
+            <form action="{% url 'listing' listing.id %}" method="post">
+                {% csrf_token %}
+                <div class="input-group">
+                    <input type="number" step="any" min="{{ listing.current_bid }}" name="new_bid" class="form-control" aria-label="Amount">
+                    <div class="input-group-append">
+                        <span class="input-group-text">$</span>
+                    </div>
+                </div>
+                <input class="btn btn-primary" type="submit" value="Place Bid">
+            </form>
+        <div>
+            {% if error_bid %}
+                <p>{{ error_bid }}</p>
+            {% elif success_bid %}
+                <p>{{ success_bid }}</p>
+            {% endif %}
+        </div>
+        </div>
+
+    {% else %}
+        <div>
+            Please login to place a bid.
+        </div>
+    {% endif %}
+
+    <div class="listing-view-detail">
+        <h3>Details</h3>
+        <ul>
+            <li>Listed by: {{ listing.user }}</li>
+            <li>Category: {{ listing.category }}</li>
+            <li>Created: {{ listing.created }}</li>
+        </ul>
+    </div>
+
+    <div>
+        <h3>Comments</h3>
+        <div class="comment">
+            {% for comments in listing.comments.all %}
+                <div class="comment-user">
+                    <b>{{ comments.user }} commented on {{ comments.created }}:</b>
+                </div>
+                <div class="comment-text">
+                    {{ comments.comment }}
+                </div>
+
+            {% empty %}
+                <div>No comments yet.</div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+
+{% endblock %}
