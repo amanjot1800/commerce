@@ -10,6 +10,9 @@ from .models import User, Listing, Bid, Comment
 
 def index(request):
 
+    if request.user.is_authenticated:
+        request.session['number_watchlist'] = User.objects.get(username=request.user.username).watchlist.all().count()
+
     return render(request, "auctions/index.html", {
         "listings": Listing.objects.all().reverse(),
     })
@@ -99,6 +102,14 @@ def create(request):
 def listing(request, listing_id):
 
     lstng = Listing.objects.get(id=listing_id)
+
+    watchlisted = False
+
+    for users in lstng.watchlist_users.all():
+        if users == request.user:
+            watchlisted = True
+            break
+
     number_of_bids = lstng.bids.all().count()
 
     if request.method == "POST":
@@ -107,6 +118,7 @@ def listing(request, listing_id):
         if new_bid <= lstng.current_bid:
             return render(request, 'auctions/listing.html', {
                 'listing': lstng,
+                'watchlisted': watchlisted,
                 'number_of_bids': number_of_bids,
                 'error_bid': 'Your bid must be greater than the current bid.'
             })
@@ -123,6 +135,7 @@ def listing(request, listing_id):
 
             return render(request, 'auctions/listing.html', {
                 'listing': lstng2,
+                'watchlisted': watchlisted,
                 'number_of_bids': number_of_bids2,
                 'success_bid': 'Your bid has been placed.'
             })
@@ -130,6 +143,7 @@ def listing(request, listing_id):
     else:
         return render(request, 'auctions/listing.html', {
             'listing': lstng,
+            'watchlisted': watchlisted,
             'number_of_bids': number_of_bids
         })
 
@@ -151,14 +165,13 @@ def my_watchlist(request):
 def watchlist(request, listing_id=0):
     if request.method == 'POST':
         lst = Listing.objects.get(id=listing_id)
-        lst.watchlist_users = request.user
-        lst.save()
+        lst.watchlist_users.add(request.user)
 
         return HttpResponseRedirect(reverse('listing', kwargs={'listing_id': listing_id}))
 
-    return render(request, 'auctions/watchlist.html', {
-        'items': User.objects.get(username=request.user.username).watchlist.all()
-    })
+    # return render(request, 'auctions/watchlist.html', {
+    #     'items': User.objects.get(username=request.user.username).watchlist.all()
+    # })
 
 
 

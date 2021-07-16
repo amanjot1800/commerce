@@ -17,8 +17,7 @@ class Listing(models.Model):
     image_url = models.URLField()
     category = models.CharField(max_length=64)
     created = models.DateTimeField(auto_now_add=True)
-    watchlist_users = models.ForeignKey(User, on_delete=models.DO_NOTHING,
-                                        related_name='watchlist', null=True, blank=True)
+    watchlist_users = models.ManyToManyField(User, related_name='watchlist', null=True, blank=True)
 
     def __str__(self):
         return f"{self.title}: ${self.current_bid} by {self.user.username}"

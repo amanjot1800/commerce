@@ -5,7 +5,7 @@
         <h3>{{ listing.title }}</h3>
     </div>
 
-    {% if not listing.watchlist_users %}
+    {% if not watchlisted %}
         <div class="no-bids">
             <form action="{% url 'watchlist' listing.id %}" method="post">
                 {% csrf_token %}
@@ -23,6 +23,7 @@
 {#            </form>#}
 {#        </div>#}
     {% endif %}
+
 
     <div>
         <img src="{{ listing.image_url }}" alt="{{ listing.title }}" width="400px">
