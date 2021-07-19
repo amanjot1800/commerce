@@ -163,15 +163,14 @@ def my_watchlist(request):
 
 
 def watchlist(request, listing_id=0):
-    if request.method == 'POST':
+    if request.method == 'POST' and request.POST.get('addwatchlist', False):
         lst = Listing.objects.get(id=listing_id)
         lst.watchlist_users.add(request.user)
-
+        request.session['number_watchlist'] = User.objects.get(username=request.user.username).watchlist.all().count()
         return HttpResponseRedirect(reverse('listing', kwargs={'listing_id': listing_id}))
 
-    # return render(request, 'auctions/watchlist.html', {
-    #     'items': User.objects.get(username=request.user.username).watchlist.all()
-    # })
-
-
-
+    elif request.method == 'POST' and request.POST.get('removewatchlist', False):
+        lst = Listing.objects.get(id=listing_id)
+        lst.watchlist_users.remove(request.user)
+        request.session['number_watchlist'] = User.objects.get(username=request.user.username).watchlist.all().count()
+        return HttpResponseRedirect(reverse('listing', kwargs={'listing_id': listing_id}))

@@ -15,7 +15,10 @@
 
     {% else %}
         <div class="no-bids">
-            <input type="button" value="Watchlisted">
+            <form action="{% url 'watchlist' listing.id %}" method="post">
+                {% csrf_token %}
+                <input type="submit" name="removewatchlist" value="Remove from watchlist">
+            </form>
         </div>
 {#        <div>#}
 {#             <form action="{% url 'addtowatchlist' %}" method="post">#}
